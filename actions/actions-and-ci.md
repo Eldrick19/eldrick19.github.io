@@ -14,7 +14,7 @@ Things I'm expecting you to know:
 
 That's kind of it! We'll be learning about how to integrate testing into our development workflow. We WILL NOT be learning about how to run Actions on self-hosted runners, scaling policies, how to deploy your code to a Cloud Provider, or any of the other things you can do on Actions (which is a lot). I might talk about these things in future posts.
 
-Also wanted to call out that I used the similarly named course from the [GitHub Learning Lab](https://lab.github.com/githubtraining/github-actions:-continuous-integration) to walk through this exercise. One of the reason I wrote this is because our [Learning Lab is getting sunset]() (at the time of writing this), so you might not even be able to access the link above. There are also a ton of other resources to learning about Actions and the CI process which I'll link at the bottom of this post. Alright let's jump in!
+Also wanted to call out that I used the similarly named course from the [GitHub Learning Lab](https://lab.github.com/githubtraining/github-actions:-continuous-integration) to walk through this exercise. One of the reason I wrote this is because our [Learning Lab is getting sunset](https://github.com/github/releases/issues/2016) (at the time of writing this), so you might not even be able to access the link above. There are also a ton of other resources to learning about Actions and the CI process which I'll link at the bottom of this post. Alright let's jump in!
 
 ## The Basics <sub><sub>10,000m view</sub></sub>
 Conceptually, we can break the CI process into 3 parts:
@@ -43,7 +43,7 @@ The best way to learn about this is by looking at some code. Let's say I have si
 
 ![Workflow Structure](img/workflow_structure.png "Workflow Structure Diagram")
 
-Ok.. now let's take a look at the template workflow provided by Node.js:
+Ok.. now let's take a look at the starter CI workflow provided by Node.js
 
 ```yaml
 # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
@@ -127,7 +127,7 @@ strategy:
 
 ### (3) Separate `test` and `build` jobs <sub><sub>100m</sub></sub>
 
-We want to follow the CI step framework we mentioned above (build, test, notify). Let's reflect this by changing `node.js.yml` to be broken down into a `build` job followed by a `test` job:
+We want to follow the CI step framework we mentioned above (code, build, test). Let's reflect this by changing `node.js.yml` to be broken down into a `build` job followed by a `test` job:
 
 ````yaml
 name: Node CI
@@ -184,7 +184,7 @@ We'll be using artifacts in this workflow to facilitate passing of the build con
 <details>
 <summary>More on GitHub artifacts.</summary>
 <br>
-When a workflow produces something other than a log entry, it's called an artifact. For example, the Node.js build will produce a Docker container that can be deployed. This artifact, the container, can be uploaded to storage using the action <a href ="https://github.com/actions/upload-artifact">actions/upload-artifact</a> and downloaded from storage using the action <a href ="https://github.com/actions/download-artifact">actions/download-artifact</a>.
+When a workflow produces something other than a log entry, it's called an artifact. For example, the Node.js build will produce a Docker container that can be deployed when we run the action <i>actions/setup-node@v1</i>. This artifact, the container, can be uploaded to storage using the action <a href ="https://github.com/actions/upload-artifact">actions/upload-artifact</a> and downloaded from storage using the action <a href ="https://github.com/actions/download-artifact">actions/download-artifact</a>.
 
 Storing an artifact helps to preserve it between jobs. Each job uses a fresh instance of a VM, so you can't reuse the artifact by saving it on the VM. If you need your artifact in a different job, you can upload the artifact to storage in one job, and download it for the other job.
 
@@ -292,6 +292,31 @@ Or, let''s say you have a rails app and part of your CI includes [linting](https
 
 These workflows can really be configured as you need.
 
+Finally, there are other tools and actions available on GitHub to have a well-rounded CI process:
+1. In the [repo template](https://github.com/Eldrick19/github-actions-for-ci) add the code block below into a new file: `.github/workflows/approval-workflow.yml`. 
+````yaml
+name: Team awesome's approval workflow
+on: pull_request_review
+jobs:
+  labelWhenApproved:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Label when approved
+      uses: pullreminders/label-when-approved-action@master
+      env:
+        APPROVALS: "1"
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ADD_LABEL: "we're approved!"
+        REMOVE_LABEL: "awaiting%20review"
+````
+This labels approved workflows, which can be used for further automation (e.g. auto-merging or even deployment!). <sub>You can turn approval requirements on under 'Settings' > 'Branches and editing the branch protection rules'</sub>
+
+2. Requiring status checks before merging ensures your CI process is validated prior to ever merging
+
+3. Allowing auto-merge to automate away the "merge branch" manual step
+
+4. etc.
+
 Hope you enjoyed - this was my first try at a blog post! Going to try and refine the process a little going forward, but excited to see where this will go. Until next time :wave:
 
 ## References / Extra Reading
@@ -300,6 +325,7 @@ Hope you enjoyed - this was my first try at a blog post! Going to try and refine
 - More on [Build Automation and Top 10 Tools](https://lightrun.com/dev-tools/top-10-build-automation-tools/)
 - More on [Test Automation and Top 10 Frameworks](https://dzone.com/articles/top-10-test-automation-frameworks-in-2020)
 - [GitHub Actions Workflow Syntax](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)
+- [Billing of GitHub Storage Space](https://docs.github.com/en/billing/managing-billing-for-github-packages/about-billing-for-github-packages)
 
 
 
